@@ -1,85 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>聊天室管理後台</title>
+  <title>Avenir 後台審批</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    button { padding: 5px 10px; }
+    body { font-family: sans-serif; padding: 20px; background: #fffaf0; }
+    h2 { margin-bottom: 10px; }
+
+    #pending {
+      width: 500px;
+      max-height: 600px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .pending-message {
+      background: #fff;
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .buttons button {
+      margin-left: 5px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-<h2>留言審批管理</h2>
+<h2>待審批留言</h2>
+<div id="pending"></div>
 
-<table>
-  <thead>
-    <tr>
-      <th>使用者</th>
-      <th>留言</th>
-      <th>狀態</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <tbody id="messages-table">
-    <!-- 留言會被動態填入 -->
-  </tbody>
-</table>
-
-<!-- Firebase SDK -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { initFirebase, listenPendingMessages, approveMessage, rejectMessage } from "./script.js";
 
-  // 🔹 Firebase 配置
-  const firebaseConfig = {
-    apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
-    authDomain: "avenirstage-75a78.firebaseapp.com",
-    projectId: "avenirstage-75a78",
-    storageBucket: "avenirstage-75a78.appspot.com",
-    messagingSenderId: "486755613692",
-    appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
-  };
+initFirebase();
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const pendingDiv = document.getElementById("pending");
 
-  const tableBody = document.getElementById("messages-table");
+// 監聽未批准留言
+listenPendingMessages((messages) => {
+  pendingDiv.innerHTML = "";
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "pending-message";
 
-  // 🔹 監聽所有留言 (包含未批准)
-  const messagesRef = collection(db, "chatMessages");
+    const span = document.createElement("span");
+    span.textContent = msg.text;
 
-  onSnapshot(messagesRef, (snapshot) => {
-    tableBody.innerHTML = "";
-    snapshot.forEach((docItem) => {
-      const msg = docItem.data();
-      const tr = document.createElement("tr");
+    const buttons = document.createElement("div");
+    buttons.className = "buttons";
 
-      tr.innerHTML = `
-        <td>${msg.user}</td>
-        <td>${msg.text}</td>
-        <td>${msg.approved ? "已批准" : "未批准"}</td>
-        <td>
-          ${!msg.approved ? `<button data-id="${docItem.id}">批准</button>` : ""}
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
+    const approveBtn = document.createElement("button");
+    approveBtn.textContent = "批准";
+    approveBtn.onclick = () => approveMessage(msg.id);
 
-    // 🔹 綁定批准按鈕事件
-    tableBody.querySelectorAll("button").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.getAttribute("data-id");
-        const docRef = doc(db, "chatMessages", id);
-        await updateDoc(docRef, { approved: true });
-      });
-    });
+    const rejectBtn = document.createElement("button");
+    rejectBtn.textContent = "拒絕";
+    rejectBtn.onclick = () => rejectMessage(msg.id);
+
+    buttons.appendChild(approveBtn);
+    buttons.appendChild(rejectBtn);
+
+    div.appendChild(span);
+    div.appendChild(buttons);
+    pendingDiv.appendChild(div);
   });
+});
 </script>
 
 </body>
 </html>
-
-
