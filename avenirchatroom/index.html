@@ -12,31 +12,30 @@
       margin-right: 5px;
       font-size: 14px;
     }
-
     form button { cursor: pointer; }
 
     #chat {
-      width: 400px;           
-      max-height: 600px;      
-      overflow: hidden;       
+      width: 400px;
+      max-height: 600px;
+      overflow: hidden;
       display: flex;
-      flex-direction: column; /* 新留言在底部 */
-      gap: 10px;              
+      flex-direction: column-reverse; /* 新留言在上 */
+      gap: 10px;
       padding: 10px;
-      background: rgba(250,250,250,0.05); 
+      background: rgba(0,0,0,0.05);
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     .chat-message {
-      background: rgba(173, 216, 230, 0.5); 
-      border-radius: 12px;  
+      background: rgba(173, 216, 230, 0.5); /* 粉藍半透明 */
+      border-radius: 12px;
       padding: 8px 12px;
-      font-size: 16px;      
-      font-weight: 500;     
-      color: #000;          
-      font-family: 'Arial', sans-serif; 
-      word-break: break-word; 
+      font-size: 16px;      /* 字體大小，可調 */
+      font-weight: 500;     /* 粗細，可調 100~900 */
+      color: #000;          /* 字色，可改 */
+      font-family: 'Arial', sans-serif; /* 字型，可換 */
+      word-break: break-word;
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.4s, transform 0.4s;
@@ -100,14 +99,11 @@ onSnapshot(approvedQuery, (snapshot) => {
     const div = document.createElement("div");
     div.className = "chat-message";
     div.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
-    chatDiv.appendChild(div);
+    chatDiv.prepend(div); // 新留言在上方
 
     // 淡入動畫
     requestAnimationFrame(() => div.classList.add("show"));
   });
-
-  // 自動捲動到底部
-  chatDiv.scrollTop = chatDiv.scrollHeight;
 });
 
 // 新增留言到 Firestore（預設未批准）
