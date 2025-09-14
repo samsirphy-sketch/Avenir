@@ -1,20 +1,83 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>管理員審批</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <title>聊天室管理後台</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    button { padding: 5px 10px; }
+  </style>
 </head>
 <body>
-  <h1>管理員審批</h1>
-  <div id="approvalList"></div>
 
-  <script src="script.js"></script>
-  <script>
-    startAdminMode();
-  </script>
+<h2>留言審批管理</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>使用者</th>
+      <th>留言</th>
+      <th>狀態</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody id="messages-table">
+    <!-- 留言會被動態填入 -->
+  </tbody>
+</table>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+  // 🔹 Firebase 配置
+  const firebaseConfig = {
+    apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
+    authDomain: "avenirstage-75a78.firebaseapp.com",
+    projectId: "avenirstage-75a78",
+    storageBucket: "avenirstage-75a78.appspot.com",
+    messagingSenderId: "486755613692",
+    appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const tableBody = document.getElementById("messages-table");
+
+  // 🔹 監聽所有留言 (包含未批准)
+  const messagesRef = collection(db, "chatMessages");
+  onSnapshot(messagesRef, (snapshot) => {
+    tableBody.innerHTML = "";
+    snapshot.forEach((docItem) => {
+      const msg = docItem.data();
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>${msg.user}</td>
+        <td>${msg.text}</td>
+        <td>${msg.approved ? "已批准" : "未批准"}</td>
+        <td>
+          ${!msg.approved ? `<button data-id="${docItem.id}">批准</button>` : ""}
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+
+    // 🔹 綁定批准按鈕事件
+    tableBody.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const docRef = doc(db, "chatMessages", id);
+        await updateDoc(docRef, { approved: true });
+      });
+    });
+  });
+</script>
+
 </body>
 </html>
+
