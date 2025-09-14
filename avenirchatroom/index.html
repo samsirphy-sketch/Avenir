@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>審批聊天室</title>
+  <title>Avenir 聊天室</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
     h2 { margin-bottom: 10px; }
@@ -12,31 +12,30 @@
       margin-right: 5px;
       font-size: 14px;
     }
-
     form button { cursor: pointer; }
 
     #chat {
-      width: 400px;           
-      max-height: 600px;      
-      overflow: hidden;       
+      width: 400px;
+      max-height: 600px;
+      overflow-y: auto;
       display: flex;
-      flex-direction: column; /* 新留言在底部 */
-      gap: 10px;              
+      flex-direction: column; /* 新留言在底 */
+      gap: 10px;
       padding: 10px;
-      background: rgba(0,0,0,0.05); 
+      background: rgba(0,0,0,0.05);
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     .chat-message {
-      background: rgba(173, 216, 230, 0.5); 
-      border-radius: 12px;  
+      background: rgba(173, 216, 230, 0.5);
+      border-radius: 12px;
       padding: 8px 12px;
-      font-size: 16px;      
-      font-weight: 500;     
-      color: #000;          
-      font-family: 'Arial', sans-serif; 
-      word-break: break-word; 
+      font-size: 16px;
+      font-weight: 500;
+      color: #000;
+      font-family: 'Arial', sans-serif;
+      word-break: break-word;
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.4s, transform 0.4s;
@@ -50,88 +49,44 @@
 </head>
 <body>
 
-<h2>Avenir聊天室</h2>
+<h2>Avenir 聊天室</h2>
 
 <form id="chat-form">
-  <input type="text" id="username" placeholder="你的名字" required>
-  <input type="text" id="message" placeholder="你的留言" required>
+  <input type="text" id="message" placeholder="輸入留言…" required>
   <button type="submit">送出</button>
 </form>
 
 <div id="chat"></div>
 
-<!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { initFirebase, sendMessage, listenApprovedMessages } from "./script.js";
 
-// 🔹 Firebase 配置
-const firebaseConfig = {
-  apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
-  authDomain: "avenirstage-75a78.firebaseapp.com",
-  projectId: "avenirstage-75a78",
-  storageBucket: "avenirstage-75a78.appspot.com",
-  messagingSenderId: "486755613692",
-  appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
-};
+initFirebase();
 
-// 初始化 Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const chatDiv = document.getElementById("chat");
-const messagesRef = collection(db, "chatMessages");
-const approvedQuery = query(messagesRef, where("approved", "==", true));
-
-// 監聽 Firestore 審批留言
-onSnapshot(approvedQuery, (snapshot) => {
-  const messages = [];
-  snapshot.forEach((doc) => {
-    const msg = doc.data();
-    messages.push(msg);
-  });
-
-  // 保留最新 10 條
-  const latest = messages.slice(-10);
-
-  chatDiv.innerHTML = ""; // 清空
-
-  latest.forEach(msg => {
-    const div = document.createElement("div");
-    div.className = "chat-message";
-    div.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
-    chatDiv.appendChild(div);
-
-    // 淡入動畫
-    requestAnimationFrame(() => div.classList.add("show"));
-  });
-
-  // 自動捲動到底部
-  chatDiv.scrollTop = chatDiv.scrollHeight;
-});
-
-// 新增留言到 Firestore（預設未批准）
 const chatForm = document.getElementById("chat-form");
+const chatDiv = document.getElementById("chat");
+
+// 送出留言
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const user = document.getElementById("username").value.trim();
   const text = document.getElementById("message").value.trim();
-  if (!user || !text) return;
-
-  await addDoc(messagesRef, { user, text, approved: false, timestamp: new Date() });
-
+  if (!text) return;
+  await sendMessage(text);
   chatForm.reset();
+});
+
+// 顯示已批准留言
+listenApprovedMessages(10, (messages) => {
+  chatDiv.innerHTML = "";
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "chat-message";
+    div.textContent = msg.text;
+    chatDiv.appendChild(div);
+    requestAnimationFrame(() => div.classList.add("show"));
+  });
 });
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
