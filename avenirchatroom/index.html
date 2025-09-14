@@ -94,7 +94,7 @@ onSnapshot(approvedQuery, (snapshot) => {
   const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   
   // 取最新 10 條
-  const latest = messages.slice(-10);
+  const latest = messages.slice(0, 10);
 
   chatDiv.innerHTML = ""; // 清空
 
@@ -134,6 +134,7 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
