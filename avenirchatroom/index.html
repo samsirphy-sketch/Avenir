@@ -1,14 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <title>審批聊天室</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #chat-box { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-top: 10px; }
-    #chat-box div { margin-bottom: 5px; }
-    form input { padding: 5px; margin-right: 5px; }
-    form button { padding: 5px; }
+    body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
+    h2 { margin-bottom: 10px; }
+
+    form input, form button {
+      padding: 5px;
+      margin-right: 5px;
+      font-size: 14px;
+    }
+
+    form button { cursor: pointer; }
+
+    #chat {
+      width: 400px;           
+      max-height: 600px;      
+      overflow: hidden;       
+      display: flex;
+      flex-direction: column; /* 新留言在底部 */
+      gap: 10px;              
+      padding: 10px;
+      background: rgba(0,0,0,0.05); 
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-message {
+      background: rgba(173, 216, 230, 0.5); 
+      border-radius: 12px;  
+      padding: 8px 12px;
+      font-size: 16px;      
+      font-weight: 500;     
+      color: #000;          
+      font-family: 'Arial', sans-serif; 
+      word-break: break-word; 
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+
+    .chat-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -23,55 +60,30 @@
 
 <div id="chat"></div>
 
-<style>
-  #chat {
-    width: 400px;           /* 調整整個留言區寬度 */
-    max-height: 600px;      /* 最多顯示空間高度 */
-    overflow: hidden;       /* 超過高度的留言自動隱藏 */
-    display: flex;
-    flex-direction: column-reverse; /* 新留言在底部 */
-    gap: 10px;              /* 留言間距 */
-    padding: 10px;
-    background: rgba(0,0,0,0.1); /* 可選留言區背景 */
-  }
-
-  .chat-message {
-    background: rgba(173, 216, 230, 0.5); /* 粉藍半透明 */
-    border-radius: 12px;  /* 圓角 */
-    padding: 8px 12px;
-    font-size: 16px;      /* 字體大小，可調 */
-    font-weight: 500;     /* 粗細，可調 100~900 */
-    color: #000;          /* 字色，可改 */
-    font-family: 'Arial', sans-serif; /* 字型，可換 */
-    word-break: break-word; /* 防止太長換行 */
-  }
-</style>
-
-
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+// 🔹 Firebase 配置
+const firebaseConfig = {
+  apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
+  authDomain: "avenirstage-75a78.firebaseapp.com",
+  projectId: "avenirstage-75a78",
+  storageBucket: "avenirstage-75a78.appspot.com",
+  messagingSenderId: "486755613692",
+  appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
+};
 
-  // 🔹 你的 Firebase 配置
-  const firebaseConfig = {
-    apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
-    authDomain: "avenirstage-75a78.firebaseapp.com",
-    projectId: "avenirstage-75a78",
-    storageBucket: "avenirstage-75a78.appspot.com",
-    messagingSenderId: "486755613692",
-    appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
-  };
-
- const app = initializeApp(firebaseConfig);
+// 初始化 Firebase
+const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const chatDiv = document.getElementById("chat");
-
 const messagesRef = collection(db, "chatMessages");
 const approvedQuery = query(messagesRef, where("approved", "==", true));
 
+// 監聽 Firestore 審批留言
 onSnapshot(approvedQuery, (snapshot) => {
   const messages = [];
   snapshot.forEach((doc) => {
@@ -79,21 +91,38 @@ onSnapshot(approvedQuery, (snapshot) => {
     messages.push(msg);
   });
 
-  // 保留最新10條
+  // 保留最新 10 條
   const latest = messages.slice(-10);
 
   chatDiv.innerHTML = ""; // 清空
 
   latest.forEach(msg => {
-    const p = document.createElement("div");
-    p.className = "chat-message";
-    p.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
-    chatDiv.appendChild(p);
+    const div = document.createElement("div");
+    div.className = "chat-message";
+    div.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
+    chatDiv.appendChild(div);
+
+    // 淡入動畫
+    requestAnimationFrame(() => div.classList.add("show"));
   });
+
+  // 自動捲動到底部
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+});
+
+// 新增留言到 Firestore（預設未批准）
+const chatForm = document.getElementById("chat-form");
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = document.getElementById("username").value.trim();
+  const text = document.getElementById("message").value.trim();
+  if (!user || !text) return;
+
+  await addDoc(messagesRef, { user, text, approved: false, timestamp: new Date() });
+
+  chatForm.reset();
 });
 </script>
+
 </body>
 </html>
-
-
-
