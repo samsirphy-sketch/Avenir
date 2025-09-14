@@ -87,9 +87,7 @@ const messagesRef = collection(db, "chatMessages");
 // 查詢已批准留言，按 timestamp 排序（asc 過濾 null，最新會在上面）
 const approvedQuery = query(
   messagesRef,
-  where("approved", "==", true),
-  orderBy("timestamp", "asc")
-);
+  where("approved", "==", true));
 
 // 監聽 Firestore 留言
 onSnapshot(approvedQuery, (snapshot) => {
@@ -136,3 +134,4 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
