@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Public Chat</title>
+  <style>
+    body{font-family:Arial;margin:20px}
+    #messages{height:300px;overflow:auto;border:1px solid #ddd;padding:8px}
+    .msg{padding:6px;border-bottom:1px solid #f0f0f0}
+  </style>
+</head>
+<body>
+  <h2>留言板（免登入）</h2>
+  <div id="messages"></div>
+  <input id="author" placeholder="你的名字（選填）" />
+  <br/><br/>
+  <textarea id="text" rows="3" cols="40" placeholder="輸入留言..."></textarea>
+  <br/>
+  <button id="send">送出（待審核）</button>
+  <p>留言將會由管理員審核後顯示在直播畫面。</p>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io({ query: { role: 'viewer' } });
+    const messagesDiv = document.getElementById('messages');
+
+    document.getElementById('send').addEventListener('click', () => {
+      const text = document.getElementById('text').value.trim();
+      const author = document.getElementById('author').value.trim() || '匿名';
+      if (!text) return alert('請輸入留言');
+      socket.emit('submitMessage', { text, author });
+      document.getElementById('text').value = '';
+      messagesDiv.innerHTML += '<div class="msg"><em>已送出，等候審核...</em></div>';
+    });
+
+    // optional: show approved messages in viewer page too
+    socket.emit('fetchApproved');
+    socket.on('approvedList', list => {
+      messagesDiv.innerHTML = '';
+      list.forEach(m => {
+        messagesDiv.innerHTML += `<div class="msg"><strong>${m.author}:</strong> ${m.text}</div>`;
+      });
+    });
+
+    // update approved as they come
+    socket.on('approved', m => {
+      messagesDiv.innerHTML += `<div class="msg"><strong>${m.author}:</strong> ${m.text}</div>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel</title>
+  <style>
+    body{font-family:Arial;margin:20px}
+    .pending{border:1px solid #ddd;padding:8px;margin-bottom:8px}
+    button{margin-right:6px}
+  </style>
+</head>
+<body>
+  <h2>管理審核面板</h2>
+  <p>注意：在 URL 加上 ?token=YOUR_ADMIN_TOKEN 。例如: /admin.html?token=change_this_token</p>
+  <div id="pendingList"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token') || '';
+    const socket = io({ query: { role: 'admin' } });
+
+    function refreshPending(list) {
+      const box = document.getElementById('pendingList');
+      box.innerHTML = '';
+      if(list.length === 0) box.innerHTML = '<em>無待審核訊息</em>';
+      list.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'pending';
+        div.innerHTML = `<strong>${m.author}</strong> (${new Date(m.time).toLocaleTimeString()})<div>${m.text}</div>`;
+        const approve = document.createElement('button');
+        approve.textContent = '批准';
+        approve.onclick = () => socket.emit('approve', { id: m.id, token });
+        const dismiss = document.createElement('button');
+        dismiss.textContent = '刪除';
+        dismiss.onclick = () => socket.emit('dismiss', { id: m.id, token });
+        div.appendChild(approve);
+        div.appendChild(dismiss);
+        box.appendChild(div);
+      });
+    }
+
+    socket.on('connect', () => {
+      console.log('admin connected');
+      socket.emit('fetchPending', token);
+    });
+
+    socket.on('pendingList', list => refreshPending(list));
+    socket.on('pendingListUpdate', list => refreshPending(list));
+    socket.on('authError', msg => alert('Auth error: ' + msg));
+  </script>
+</body>
+</html>
