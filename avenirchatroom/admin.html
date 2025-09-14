@@ -6,58 +6,52 @@
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
     h2 { margin-bottom: 10px; }
-    #pending-chat { width: 500px; max-height: 600px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05);}
-    .chat-message { margin-bottom: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(173,216,230,0.5); display: flex; justify-content: space-between; align-items: center; }
-    button { cursor: pointer; margin-left: 10px; padding: 4px 8px; }
+
+    #chat {
+      width: 500px;
+      max-height: 700px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column-reverse; /* 最新留言在上方 */
+      gap: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-message {
+      background: rgba(173, 216, 230, 0.5); 
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #000;
+      font-family: 'Arial', sans-serif;
+      word-break: break-word;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-message button {
+      padding: 4px 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #4CAF50;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
-<h2>審批未批准留言</h2>
-<div id="pending-chat"></div>
+<h2>聊天室審批後台</h2>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, query, where, orderBy, onSnapshot, updateDoc, doc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+<div id="chat"></div>
 
-// 🔹 Firebase 配置
-const firebaseConfig = {
-  apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
-  authDomain: "avenirstage-75a78.firebaseapp.com",
-  projectId: "avenirstage-75a78",
-  storageBucket: "avenirstage-75a78.appspot.com",
-  messagingSenderId: "486755613692",
-  appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
-};
+<!-- Firebase SDK -->
+<script type="module" src="script.js"></script>
 
-// 初始化 Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const pendingDiv = document.getElementById("pending-chat");
-const messagesRef = collection(db, "chatMessages");
-
-// 監聽未批准留言，按時間升序
-const pendingQuery = query(messagesRef, where("approved", "==", false), orderBy("timestamp", "asc"));
-
-onSnapshot(pendingQuery, snapshot => {
-  pendingDiv.innerHTML = "";
-  snapshot.forEach(docSnap => {
-    const msg = docSnap.data();
-    const div = document.createElement("div");
-    div.className = "chat-message";
-    div.textContent = msg.text; // 不顯示使用者名稱
-
-    const approveBtn = document.createElement("button");
-    approveBtn.textContent = "批准";
-    approveBtn.onclick = async () => {
-      await updateDoc(doc(db, "chatMessages", docSnap.id), { approved: true });
-    };
-
-    div.appendChild(approveBtn);
-    pendingDiv.appendChild(div);
-  });
-});
-</script>
 </body>
 </html>
