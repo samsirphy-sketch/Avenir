@@ -102,7 +102,7 @@ onSnapshot(approvedQuery, (snapshot) => {
     const div = document.createElement("div");
     div.className = "chat-message";
     div.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
-    chatDiv.appendChild(div);
+    chatDiv.prepend(div);
 
     // 淡入動畫
     requestAnimationFrame(() => div.classList.add("show"));
@@ -134,5 +134,6 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
