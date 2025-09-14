@@ -1,61 +1,40 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+// 🔹 Firebase 配置
+const firebaseConfig = {
+  apiKey: "AIzaSyBJ1UGX6XNIhRSPedPbm9NBuM-rS6fdrwo",
+  authDomain: "avenirstage-75a78.firebaseapp.com",
+  projectId: "avenirstage-75a78",
+  storageBucket: "avenirstage-75a78.appspot.com",
+  messagingSenderId: "486755613692",
+  appId: "1:486755613692:web:0d5c3b3bbbe8bd90021079"
+};
+
 // 初始化 Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-let adminMode = false;
+const chatDiv = document.getElementById("chat");
+const messagesRef = collection(db, "chatMessages");
 
-function startAdminMode() { adminMode = true; loadMessages(); }
-function startUserMode() { adminMode = false; loadMessages(); }
+// 監聽已批准留言，按時間降序（最新在上）
+const approvedQuery = query(messagesRef, where("approved", "==", true), orderBy("timestamp", "desc"));
 
-if (!adminMode) {
-  document.getElementById("sendBtn").onclick = () => {
-    const text = document.getElementById("msgInput").value;
-    if (!text) return;
-    db.collection("messages").add({
-      text: text,
-      approved: false,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    document.getElementById("msgInput").value = "";
-  }
-}
+onSnapshot(approvedQuery, snapshot => {
+  const messages = [];
+  snapshot.forEach(doc => {
+    messages.push(doc.data());
+  });
 
-function loadMessages() {
-  if (adminMode) {
-    db.collection("messages").orderBy("timestamp").onSnapshot(snapshot => {
-      const list = document.getElementById("approvalList");
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        if (!data.approved) {
-          const div = document.createElement("div");
-          div.className = "message";
-          div.textContent = data.text;
-          const btn = document.createElement("button");
-          btn.className = "approveBtn";
-          btn.textContent = "批准";
-          btn.onclick = () => {
-            db.collection("messages").doc(doc.id).update({ approved: true });
-          };
-          div.appendChild(btn);
-          list.appendChild(div);
-        }
-      });
-    });
-  } else {
-    db.collection("messages").where("approved", "==", true).orderBy("timestamp")
-      .onSnapshot(snapshot => {
-        const box = document.getElementById("chatbox");
-        box.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const div = document.createElement("div");
-          div.className = "message";
-          div.textContent = data.text;
-          box.appendChild(div);
-        });
-      });
-  }
-}
+  // 只保留最新 10 條
+  const latest = messages.slice(0, 10);
 
-if (!adminMode) startUserMode();
+  chatDiv.innerHTML = "";
+  latest.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = "chat-message";
+    div.textContent = msg.text; // 不顯示使用者名稱
+    chatDiv.appendChild(div);
+  });
+});
