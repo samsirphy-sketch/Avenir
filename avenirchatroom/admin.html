@@ -2,56 +2,57 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>聊天室審批後台</title>
+  <title>聊天室管理後台</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
     h2 { margin-bottom: 10px; }
-
-    #chat {
-      width: 500px;
-      max-height: 700px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column-reverse; /* 最新留言在上方 */
-      gap: 10px;
-      padding: 10px;
-      background: rgba(0,0,0,0.05);
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-
-    .chat-message {
-      background: rgba(173, 216, 230, 0.5); 
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 16px;
-      font-weight: 500;
-      color: #000;
-      font-family: 'Arial', sans-serif;
-      word-break: break-word;
+    .message {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: rgba(173,216,230,0.5);
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-bottom: 8px;
     }
-
-    .chat-message button {
-      padding: 4px 8px;
-      cursor: pointer;
-      border: none;
-      border-radius: 6px;
-      background: #4CAF50;
-      color: #fff;
-    }
+    button { margin-left: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-<h2>聊天室審批後台</h2>
+<h2>審批留言</h2>
+<div id="messages"></div>
 
-<div id="chat"></div>
+<script type="module">
+import { initFirebase, listenPendingMessages, approveMessage, rejectMessage } from './script.js';
 
-<!-- Firebase SDK -->
-<script type="module" src="script.js"></script>
+initFirebase();
+
+const messagesDiv = document.getElementById('messages');
+
+// 監聽未批准留言
+listenPendingMessages('chat', (messages) => {
+  messagesDiv.innerHTML = '';
+  messages.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'message';
+    div.textContent = msg.text;
+
+    const approveBtn = document.createElement('button');
+    approveBtn.textContent = '批准';
+    approveBtn.onclick = () => approveMessage('chat', msg.id);
+
+    const rejectBtn = document.createElement('button');
+    rejectBtn.textContent = '拒絕';
+    rejectBtn.onclick = () => rejectMessage('chat', msg.id);
+
+    div.appendChild(approveBtn);
+    div.appendChild(rejectBtn);
+
+    messagesDiv.appendChild(div);
+  });
+});
+</script>
 
 </body>
 </html>
