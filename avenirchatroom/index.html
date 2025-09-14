@@ -81,8 +81,7 @@ const db = getFirestore(app);
 
 const chatDiv = document.getElementById("chat");
 const messagesRef = collection(db, "chatMessages");
-const approvedQuery = query(messagesRef, where("approved", "==", true),
-                            orderBy("timestamp", "desc"));
+const approvedQuery = query(messagesRef, where("approved", "==", true), orderBy("timestamp", "desc"));
 
 // 監聽 Firestore 審批留言
 onSnapshot(approvedQuery, (snapshot) => {
@@ -127,6 +126,7 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
