@@ -12,30 +12,31 @@
       margin-right: 5px;
       font-size: 14px;
     }
+
     form button { cursor: pointer; }
 
     #chat {
-      width: 400px;
-      max-height: 600px;
-      overflow: hidden;
+      width: 400px;           
+      max-height: 600px;      
+      overflow: hidden;       
       display: flex;
-      flex-direction: column; /* 新留言在上 */
-      gap: 10px;
+      flex-direction: column-reverse; /* 最新留言在最上方 */
+      gap: 10px;              
       padding: 10px;
-      background: rgba(0,0,0,0.05);
+      background: rgba(0,0,0,0.05); 
       border-radius: 8px;
       border: 1px solid #ccc;
     }
 
     .chat-message {
-      background: rgba(173, 216, 230, 0.5); /* 粉藍半透明 */
-      border-radius: 12px;
+      background: rgba(173, 216, 230, 0.5); 
+      border-radius: 12px;  
       padding: 8px 12px;
-      font-size: 16px;      /* 字體大小，可調 */
-      font-weight: 500;     /* 粗細，可調 100~900 */
-      color: #000;          /* 字色，可改 */
-      font-family: 'Arial', sans-serif; /* 字型，可換 */
-      word-break: break-word;
+      font-size: 16px;      
+      font-weight: 500;     
+      color: #000;          
+      font-family: 'Arial', sans-serif; 
+      word-break: break-word; 
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.4s, transform 0.4s;
@@ -62,7 +63,8 @@
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, orderBy, onSnapshot, addDoc } 
+from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 // 🔹 Firebase 配置
 const firebaseConfig = {
@@ -80,18 +82,23 @@ const db = getFirestore(app);
 
 const chatDiv = document.getElementById("chat");
 const messagesRef = collection(db, "chatMessages");
-const approvedQuery = query(messagesRef, where("approved", "==", true));
 
-// 監聽 Firestore 審批留言
+// 查詢已批准留言，按 timestamp 排序
+const approvedQuery = query(
+  messagesRef,
+  where("approved", "==", true),
+  orderBy("timestamp", "desc") // 最新留言排前面
+);
+
+// 監聽 Firestore 留言
 onSnapshot(approvedQuery, (snapshot) => {
   const messages = [];
   snapshot.forEach((doc) => {
-    const msg = doc.data();
-    messages.push(msg);
+    messages.push(doc.data());
   });
 
-  // 保留最新 10 條
-  const latest = messages.slice(-10);
+  // 取最新 10 條
+  const latest = messages.slice(0, 10);
 
   chatDiv.innerHTML = ""; // 清空
 
@@ -99,14 +106,14 @@ onSnapshot(approvedQuery, (snapshot) => {
     const div = document.createElement("div");
     div.className = "chat-message";
     div.textContent = msg.user ? `${msg.user}: ${msg.text}` : msg.text;
-    chatDiv.prepend(div); // 新留言在上方
+    chatDiv.appendChild(div);
 
     // 淡入動畫
     requestAnimationFrame(() => div.classList.add("show"));
   });
 });
 
-// 新增留言到 Firestore（預設未批准）
+// 送出新留言到 Firestore（預設未批准）
 const chatForm = document.getElementById("chat-form");
 chatForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -114,7 +121,12 @@ chatForm.addEventListener("submit", async (e) => {
   const text = document.getElementById("message").value.trim();
   if (!user || !text) return;
 
-  await addDoc(messagesRef, { user, text, approved: false, timestamp: new Date() });
+  await addDoc(messagesRef, { 
+    user, 
+    text, 
+    approved: false, 
+    timestamp: new Date() // 時間戳記
+  });
 
   chatForm.reset();
 });
@@ -122,4 +134,3 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
-
