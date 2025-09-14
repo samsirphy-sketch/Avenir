@@ -23,9 +23,10 @@ export function initFirebase() {
 export async function sendMessage(collectionName, text) {
   if (!db) return;
   await addDoc(collection(db, collectionName), {
-    text,
-    approved: false,
-    timestamp: new Date()
+  text,
+  approved: false,
+  timestamp: serverTimestamp(), // 真正排序用
+  createdAt: new Date()         // 預設本機時間，避免暫時 null
   });
 }
 
@@ -64,4 +65,5 @@ export async function rejectMessage(collectionName, id) {
   const docRef = doc(db, collectionName, id);
   await deleteDoc(docRef);
 }
+
 
