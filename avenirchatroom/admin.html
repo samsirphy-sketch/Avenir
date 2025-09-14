@@ -50,12 +50,7 @@
 
   // 🔹 監聽所有留言 (包含未批准)
   const messagesRef = collection(db, "chatMessages");
-  // 只抓未審批留言，按時間升序排列
-  const pendingQuery = query(
-    messagesRef,
-    where("approved", "==", false),
-    orderBy("timestamp", "asc")
-     );
+
   onSnapshot(messagesRef, (snapshot) => {
     tableBody.innerHTML = "";
     snapshot.forEach((docItem) => {
@@ -86,4 +81,5 @@
 
 </body>
 </html>
+
 
