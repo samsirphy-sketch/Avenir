@@ -33,7 +33,7 @@ export async function sendMessage(collectionName, text) {
 export function listenApprovedMessages(collectionName, limit, callback) {
   if (!db) return;
   const messagesRef = collection(db, collectionName);
-  const q = query(messagesRef, where("approved", "==", true), orderBy("timestamp", "desc"));
+  const q = query(messagesRef, where("approved", "==", true), orderBy("timestamp", "asc"));
   onSnapshot(q, snapshot => {
     const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
     callback(messages.slice(0, limit));
@@ -64,3 +64,4 @@ export async function rejectMessage(collectionName, id) {
   const docRef = doc(db, collectionName, id);
   await deleteDoc(docRef);
 }
+
