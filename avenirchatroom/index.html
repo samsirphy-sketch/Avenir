@@ -92,8 +92,8 @@ onSnapshot(approvedQuery, (snapshot) => {
   });
 
   // 保留最新 10 條
-  const latest = messages.slice(-10);
-
+  const latest = messages.slice(-10).reverse();
+  
   chatDiv.innerHTML = ""; // 清空
 
   latest.forEach(msg => {
@@ -126,4 +126,5 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
