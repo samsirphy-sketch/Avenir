@@ -39,8 +39,7 @@ export function listenApprovedMessages(limit, callback) {
   const messagesRef = collection(db, DEFAULT_COLLECTION);
   const q = query(
     messagesRef,
-    where("approved", "==", true),
-    orderBy("timestamp", "asc") // 🔹 依時間正序
+    where("approved", "==", true) // 🔹 依時間正序
   );
   onSnapshot(q, snapshot => {
     const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
@@ -54,8 +53,7 @@ export function listenPendingMessages(callback) {
   const messagesRef = collection(db, DEFAULT_COLLECTION);
   const q = query(
     messagesRef,
-    where("approved", "==", false),
-    orderBy("timestamp", "asc")
+    where("approved", "==", false)
   );
   onSnapshot(q, snapshot => {
     const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
@@ -76,3 +74,4 @@ export async function rejectMessage(id) {
   const docRef = doc(db, DEFAULT_COLLECTION, id);
   await deleteDoc(docRef);
 }
+
