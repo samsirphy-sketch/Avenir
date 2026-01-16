@@ -18,7 +18,7 @@
    #chat {
   width: 1800px;             /* 字體變大，寬度也建議加寬 */
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 設定三欄，寬度平分 */
+  grid-template-columns: repeat(2, 1fr); /* 設定兩欄，寬度平分 */
   grid-template-rows: repeat(7, auto);   /* 設定七列 */
   grid-auto-flow: column;                /* 重要：讓內容由上而下填滿第一欄，再排到第二欄 */
   gap: 15px;                /* 留言之間的間距 */
@@ -36,11 +36,11 @@
   
   /* 字體放大 1.5 倍 */
   /* 原本 16px * 1.5 = 24px */
-  font-size: 24px; 
+  font-size: 30px; 
   
   font-weight: 700;
   color: #333;
-  line-height: 1.4;         /* 增加行高，字體大才不會太擠 */
+  line-height: 1.6;         /* 增加行高，字體大才不會太擠 */
   word-break: break-word;   /* 避免長文字撐破格子 */
 }
 
@@ -96,7 +96,7 @@ onSnapshot(approvedQuery, (snapshot) => {
   const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   
   // 取最新 10 條
-  const latest = messages.slice(0, 21);
+  const latest = messages.slice(0, 14);
 
   chatDiv.innerHTML = ""; // 清空
 
@@ -136,6 +136,7 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
