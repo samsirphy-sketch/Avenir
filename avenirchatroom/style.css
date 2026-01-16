@@ -1,0 +1,7 @@
+body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+#chatbox, #approvalList { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; background: #fff; margin-bottom: 10px; }
+input { padding: 5px; width: 70%; }
+button { padding: 5px 10px; }
+.message { margin-bottom: 5px; }
+.message span { font-weight: bold; }
+.approveBtn { margin-left: 10px; cursor: pointer; color: green; }
