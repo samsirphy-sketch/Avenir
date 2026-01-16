@@ -5,12 +5,16 @@
   <title>Avenir 光映未來留言區</title>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f7f7f7; }
-    h2 { margin-bottom: 10px; }
+    h2 {
+  font-size: 48px;      /* 設定固定大小，你可以自行調整數字 */
+  margin-bottom: 15px; /* 順便調整標題下方的間距 */
+  color: #333;         /* 也可以順便改顏色 */
+}
 
     form input, form button {
       padding: 5px;
       margin-right: 5px;
-      font-size: 48px;
+      font-size: 20px;
     }
 
     form button { cursor: pointer; }
@@ -136,6 +140,7 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
