@@ -7,8 +7,26 @@
     body { font-family: sans-serif; padding: 20px; background: #fffaf0; }
     h2 { margin-bottom: 10px; }
 
+    /* 登入區塊樣式 */
+    #login-section {
+      text-align: center;
+      margin-top: 100px;
+    }
+    #login-section input {
+      padding: 10px;
+      font-size: 16px;
+    }
+    #login-section button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* 後台介面預設隱藏 */
+    #admin-panel { display: none; }
+
     #pending {
-      width: 500px;
+      width: 600px; /*稍微加寬以容納名字*/
       max-height: 600px;
       overflow-y: auto;
       display: flex;
@@ -29,6 +47,18 @@
       justify-content: space-between;
       align-items: center;
     }
+    
+    .msg-content {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .msg-user {
+        font-weight: bold;
+        color: #555;
+        font-size: 0.9em;
+        margin-bottom: 4px;
+    }
 
     .buttons button {
       margin-left: 5px;
@@ -39,45 +69,93 @@
 </head>
 <body>
 
-<h2>待審批留言</h2>
-<div id="pending"></div>
+<div id="login-section">
+  <h2>管理員登入</h2>
+  <input type="password" id="admin-pass" placeholder="請輸入密碼">
+  <button id="login-btn">進入</button>
+  <p id="error-msg" style="color:red; display:none;">密碼錯誤</p>
+</div>
+
+<div id="admin-panel">
+  <h2>待審批留言</h2>
+  <div id="pending"></div>
+</div>
 
 <script type="module">
 import { initFirebase, listenPendingMessages, approveMessage, rejectMessage } from "./script.js";
 
-initFirebase();
+// --- 設定你的簡易密碼 ---
+const ADMIN_PASSWORD = "avenir_secure"; 
+// ----------------------
 
+const loginSection = document.getElementById("login-section");
+const adminPanel = document.getElementById("admin-panel");
+const passInput = document.getElementById("admin-pass");
+const loginBtn = document.getElementById("login-btn");
+const errorMsg = document.getElementById("error-msg");
 const pendingDiv = document.getElementById("pending");
 
-// 監聽未批准留言
-listenPendingMessages((messages) => {
-  pendingDiv.innerHTML = "";
-  messages.forEach(msg => {
-    const div = document.createElement("div");
-    div.className = "pending-message";
+// 檢查密碼並啟動 Firebase
+function checkLogin() {
+  if (passInput.value === ADMIN_PASSWORD) {
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
+    startAdminApp();
+  } else {
+    errorMsg.style.display = "block";
+    passInput.value = "";
+  }
+}
 
-    const span = document.createElement("span");
-    span.textContent = msg.text;
-
-    const buttons = document.createElement("div");
-    buttons.className = "buttons";
-
-    const approveBtn = document.createElement("button");
-    approveBtn.textContent = "批准";
-    approveBtn.onclick = () => approveMessage(msg.id);
-
-    const rejectBtn = document.createElement("button");
-    rejectBtn.textContent = "拒絕";
-    rejectBtn.onclick = () => rejectMessage(msg.id);
-
-    buttons.appendChild(approveBtn);
-    buttons.appendChild(rejectBtn);
-
-    div.appendChild(span);
-    div.appendChild(buttons);
-    pendingDiv.appendChild(div);
-  });
+loginBtn.addEventListener("click", checkLogin);
+passInput.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") checkLogin();
 });
+
+function startAdminApp() {
+  initFirebase();
+
+  listenPendingMessages((messages) => {
+    pendingDiv.innerHTML = "";
+    messages.forEach(msg => {
+      const div = document.createElement("div");
+      div.className = "pending-message";
+
+      // 建立顯示名字和內容的區塊
+      const contentDiv = document.createElement("div");
+      contentDiv.className = "msg-content";
+
+      const userSpan = document.createElement("span");
+      userSpan.className = "msg-user";
+      userSpan.textContent = msg.user || "匿名"; // 顯示名字
+
+      const textSpan = document.createElement("span");
+      textSpan.textContent = msg.text;
+
+      contentDiv.appendChild(userSpan);
+      contentDiv.appendChild(textSpan);
+
+      // 按鈕區塊
+      const buttons = document.createElement("div");
+      buttons.className = "buttons";
+
+      const approveBtn = document.createElement("button");
+      approveBtn.textContent = "批准";
+      approveBtn.onclick = () => approveMessage(msg.id);
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.textContent = "拒絕";
+      rejectBtn.onclick = () => rejectMessage(msg.id);
+
+      buttons.appendChild(approveBtn);
+      buttons.appendChild(rejectBtn);
+
+      div.appendChild(contentDiv);
+      div.appendChild(buttons);
+      pendingDiv.appendChild(div);
+    });
+  });
+}
 </script>
 
 </body>
