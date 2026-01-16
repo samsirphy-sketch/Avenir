@@ -15,32 +15,34 @@
 
     form button { cursor: pointer; }
 
-    #chat {
-      width: 400px;
-      max-height: 600px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column; /* 最新留言在上 */
-      gap: 10px;
-      padding: 10px;
-      background: rgba(0,0,0,0.05);
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
+   #chat {
+  width: 900px;             /* 字體變大，寬度也建議加寬 */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 設定兩欄，寬度平分 */
+  grid-template-rows: repeat(7, auto);   /* 設定七列 */
+  grid-auto-flow: column;                /* 重要：讓內容由上而下填滿第一欄，再排到第二欄 */
+  gap: 15px;                /* 留言之間的間距 */
+  padding: 15px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  max-height: none;         /* 取消原本的高度限制 */
+}
 
     .chat-message {
-      background: rgba(173, 216, 230, 0.5); /* 粉藍半透明 */
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 16px;
-      font-weight: 700;
-      color: #000;
-      font-family: 'Arial', sans-serif;
-      word-break: break-word;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.4s, transform 0.4s;
-    }
+  background: rgba(173, 216, 230, 0.5);
+  border-radius: 12px;
+  padding: 12px 18px;
+  
+  /* 字體放大 1.5 倍 */
+  /* 原本 16px * 1.5 = 24px */
+  font-size: 24px; 
+  
+  font-weight: 700;
+  color: #333;
+  line-height: 1.4;         /* 增加行高，字體大才不會太擠 */
+  word-break: break-word;   /* 避免長文字撐破格子 */
+}
 
     .chat-message.show {
       opacity: 1;
@@ -94,7 +96,7 @@ onSnapshot(approvedQuery, (snapshot) => {
   const messages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   
   // 取最新 10 條
-  const latest = messages.slice(0, 10);
+  const latest = messages.slice(0, 14);
 
   chatDiv.innerHTML = ""; // 清空
 
@@ -134,6 +136,7 @@ chatForm.addEventListener("submit", async (e) => {
 
 </body>
 </html>
+
 
 
 
